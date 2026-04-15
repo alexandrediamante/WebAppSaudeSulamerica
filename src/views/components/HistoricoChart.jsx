@@ -1,0 +1,59 @@
+import React from 'react';
+import { BarChart3, History } from 'lucide-react';
+import { formatCur } from '../../utils/formatters';
+
+const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto }) => {
+  return (
+    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 overflow-visible">
+        <h3 className="font-black text-slate-800 mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+            <BarChart3 size={18} className="text-indigo-500" />
+            Histórico de Faturamento Anual
+        </h3>
+        
+        {history.length === 0 ? (
+            <div className="h-48 flex items-center justify-center flex-col text-slate-400">
+                <History size={32} className="mb-2 opacity-50" />
+                <p className="text-sm font-medium">Nenhum histórico salvo ainda.</p>
+                <p className="text-xs">Clique em "Gravar Mês" para iniciar seu histórico.</p>
+            </div>
+        ) : (
+            <div className="h-56 flex items-end gap-2 sm:gap-4 overflow-visible pb-2 pt-12">
+                {history.map((h) => {
+                    const heightPercentage = (h.totalBoleto / maxChartValue) * 100;
+                    const isCurrent = h.monthYear === currentMonth;
+                    
+                    return (
+                        <div key={h.id} className="flex flex-col items-center flex-shrink-0 group">
+                            <div className="relative flex justify-center w-12 sm:w-16 h-40">
+                                {/* Tooltip Hover */}
+                                <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded pointer-events-none whitespace-nowrap z-50">
+                                    {formatCur(h.totalBoleto)}
+                                    <br/>
+                                    Copart: {formatCur(h.items.reduce((acc, i) => acc + i.copart, 0))}
+                                </div>
+                                
+                                {/* Barra do Gráfico */}
+                                <div 
+                                    className={`w-full rounded-t-md transition-all duration-500 flex items-end ${isCurrent ? 'bg-indigo-500' : 'bg-slate-200 group-hover:bg-indigo-300'}`}
+                                    style={{ height: `${heightPercentage}%` }}
+                                >
+                                    {/* Barra interna de coparticipação (visual) */}
+                                    <div 
+                                       className="w-full bg-indigo-900/20 rounded-t-md" 
+                                       style={{ height: `${h.totalBoleto > 0 ? (h.items.reduce((acc, i) => acc + i.copart, 0) / h.totalBoleto) * 100 : 0}%` }}
+                                    />
+                                </div>
+                            </div>
+                            <span className={`mt-3 text-[10px] font-bold uppercase tracking-wider ${isCurrent ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                {h.monthYear.split('-')[1]}/{h.monthYear.split('-')[0].slice(2)}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        )}
+    </div>
+  );
+};
+
+export default HistoricoChart;

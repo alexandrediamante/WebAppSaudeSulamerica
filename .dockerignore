@@ -1,0 +1,78 @@
+# =============================================================================
+# Docker Ignore - WebApp Saude Sulamerica
+# Arquivos e diretórios a serem ignorados durante o build Docker
+# =============================================================================
+
+# Dependências do Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Diretório de build/dist
+# (será gerado durante o build no container)
+dist
+dist-ssr
+
+# Arquivos de ambiente (contêm credenciais sensíveis)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Diretório Git
+.git
+.gitignore
+.gitattributes
+
+# Diretório de IDE e editores
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Diretório de testes (não necessário em produção)
+coverage
+.nyc_output
+
+# Diretório de cache
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+# Arquivos temporários
+tmp
+temp
+*.tmp
+
+# Arquivos de sistema operacional
+Thumbs.db
+.DS_Store
+
+# Diretórios e arquivos do Qoder (IDE)
+.qoder
+
+# Documentação (não necessária em produção)
+*.md
+README.md
+CHANGELOG.md
+LICENSE
+
+# Arquivos de configuração de deploy (já estão no container via COPY)
+# deploy.sh
+# ecosystem.config.cjs
+
+# Outros
+*.tgz
+*.tar.gz
