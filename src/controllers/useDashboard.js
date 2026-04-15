@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "./useAuth";
 import { useFirestore } from "./useFirestore";
+import { useBoleto } from "./useBoleto";
 import {
   initialBeneficiarios,
   DEFAULT_TOTAL_BOLETO,
@@ -10,11 +11,21 @@ import { calcularRateio } from "../models/rateio";
 export function useDashboard() {
   const { user, authError } = useAuth();
   const { history, isSaving, saveSuccess, saveFechamento } = useFirestore(user);
+  const {
+    isUploading,
+    uploadError,
+    boletoData,
+    uploadBoleto,
+    clearBoleto,
+    extractionMethod,
+    progress,
+  } = useBoleto();
   const [currentMonth, setCurrentMonth] = useState(
     new Date().toISOString().slice(0, 7),
   );
   const [items, setItems] = useState(initialBeneficiarios);
   const [totalBoleto, setTotalBoleto] = useState(DEFAULT_TOTAL_BOLETO);
+  const [currentBoleto, setCurrentBoleto] = useState(null);
 
   // Carregar dados se selecionar mês antigo
   useEffect(() => {
@@ -49,7 +60,16 @@ export function useDashboard() {
     );
   };
 
-  const handleSave = () => saveFechamento(currentMonth, totalBoleto, totals);
+  const handleBoletoImport = (boletoData) => {
+    setTotalBoleto(boletoData.valorCobrado);
+    if (boletoData.mesReferencia) {
+      setCurrentMonth(boletoData.mesReferencia);
+    }
+    setCurrentBoleto(boletoData);
+  };
+
+  const handleSave = () =>
+    saveFechamento(currentMonth, totalBoleto, totals, currentBoleto);
 
   const maxChartValue =
     Math.max(...history.map((h) => h.totalBoleto), totalBoleto, 2000) * 1.1;
@@ -69,5 +89,14 @@ export function useDashboard() {
     saveSuccess,
     handleSave,
     maxChartValue,
+    handleBoletoImport,
+    currentBoleto,
+    isUploading,
+    uploadError,
+    boletoData,
+    uploadBoleto,
+    clearBoleto,
+    extractionMethod,
+    progress,
   };
 }

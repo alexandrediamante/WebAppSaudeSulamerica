@@ -36,7 +36,12 @@ export function useFirestore(user) {
   }, [user]);
 
   // Salvar Fechamento
-  const saveFechamento = async (currentMonth, totalBoleto, totals) => {
+  const saveFechamento = async (
+    currentMonth,
+    totalBoleto,
+    totals,
+    boletoInfo = null,
+  ) => {
     if (!user) return;
     setIsSaving(true);
     try {
@@ -63,6 +68,17 @@ export function useFirestore(user) {
           proporcional: i.proporcional,
         })),
         updatedAt: new Date().toISOString(),
+        boleto: boletoInfo
+          ? {
+              valorCobrado: boletoInfo.valorCobrado,
+              codigoBarras: boletoInfo.codigoBarras,
+              numeroDocumento: boletoInfo.numeroDocumento,
+              nossoNumero: boletoInfo.nossoNumero,
+              beneficiario: boletoInfo.beneficiario,
+              pagador: boletoInfo.pagador,
+              importadoEm: boletoInfo.importadoEm,
+            }
+          : null,
       };
       await setDoc(docRef, payload);
       setSaveSuccess(true);

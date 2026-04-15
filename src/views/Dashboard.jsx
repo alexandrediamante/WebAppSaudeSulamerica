@@ -3,6 +3,8 @@ import { useDashboard } from '../controllers/useDashboard';
 import AuthWarning from './components/AuthWarning';
 import Header from './components/Header';
 import BoletoInput from './components/BoletoInput';
+import BoletoUpload from './components/BoletoUpload';
+import BoletoHistory from './components/BoletoHistory';
 import BeneficiariosTable from './components/BeneficiariosTable';
 import RateioCard from './components/RateioCard';
 import HistoricoChart from './components/HistoricoChart';
@@ -11,7 +13,9 @@ const Dashboard = () => {
   const {
     authError, history, currentMonth, setCurrentMonth,
     items, totalBoleto, setTotalBoleto, totals, updateItem,
-    isSaving, saveSuccess, handleSave, maxChartValue
+    isSaving, saveSuccess, handleSave, maxChartValue,
+    handleBoletoImport, isUploading, uploadError, boletoData,
+    uploadBoleto, clearBoleto, extractionMethod, progress
   } = useDashboard();
 
   return (
@@ -22,6 +26,31 @@ const Dashboard = () => {
           currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
           isSaving={isSaving} saveSuccess={saveSuccess} onSave={handleSave}
         />
+        {/* Seção de Importação de Boleto */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-8">
+            <BoletoUpload
+              onUpload={uploadBoleto}
+              isUploading={isUploading}
+              uploadError={uploadError}
+              boletoData={boletoData}
+              extractionMethod={extractionMethod}
+              progress={progress}
+              onConfirm={(data) => {
+                handleBoletoImport(data);
+                clearBoleto();
+              }}
+              onCancel={clearBoleto}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <BoletoHistory
+              history={history}
+              currentMonth={currentMonth}
+              onSelectMonth={setCurrentMonth}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
             <BoletoInput totalBoleto={totalBoleto} setTotalBoleto={setTotalBoleto} currentMonth={currentMonth} />
