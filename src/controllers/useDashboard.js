@@ -26,6 +26,7 @@ export function useDashboard() {
   const [items, setItems] = useState(initialBeneficiarios);
   const [totalBoleto, setTotalBoleto] = useState(DEFAULT_TOTAL_BOLETO);
   const [currentBoleto, setCurrentBoleto] = useState(null);
+  const [currentBoletoDados, setCurrentBoletoDados] = useState(null);
 
   // Carregar dados se selecionar mês antigo
   useEffect(() => {
@@ -40,10 +41,17 @@ export function useDashboard() {
             : item;
         }),
       );
+      // Carregar dados do boleto do histórico
+      if (monthData.boleto) {
+        setCurrentBoletoDados(monthData.boleto);
+      } else {
+        setCurrentBoletoDados(null);
+      }
     } else {
       setItems((prevItems) =>
         prevItems.map((item) => ({ ...item, copart: 0 })),
       );
+      setCurrentBoletoDados(null);
     }
   }, [currentMonth, history]);
 
@@ -66,6 +74,7 @@ export function useDashboard() {
       setCurrentMonth(boletoData.mesReferencia);
     }
     setCurrentBoleto(boletoData);
+    setCurrentBoletoDados(boletoData);
   };
 
   const handleSave = () =>
@@ -91,6 +100,8 @@ export function useDashboard() {
     maxChartValue,
     handleBoletoImport,
     currentBoleto,
+    currentBoletoDados,
+    setCurrentMonth,
     isUploading,
     uploadError,
     boletoData,

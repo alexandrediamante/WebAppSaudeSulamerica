@@ -1,18 +1,10 @@
 import React from 'react';
-import { Receipt, ChevronDown } from 'lucide-react';
+import { Receipt, ChevronDown, Calendar, CheckCircle2, Circle } from 'lucide-react';
 import { formatCur, formatMonthLabel } from '../../utils/formatters';
 
-const BoletoHistory = ({ history, currentMonth, onSelectMonth }) => {
-  // Filtra apenas os items que têm campo boleto com dados
-  const boletosImportados = history.filter(item => item.boleto && item.boleto.valorCobrado);
-
-  // Se não há boletos importados, não renderiza nada
-  if (boletosImportados.length === 0) {
-    return null;
-  }
-
-  // Ordena por mês (mais recente primeiro)
-  const boletosOrdenados = [...boletosImportados].sort((a, b) => {
+const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDados }) => {
+  // Ordena todo o histórico por mês (mais recente primeiro)
+  const historicoOrdenado = [...history].sort((a, b) => {
     if (a.monthYear < b.monthYear) return 1;
     if (a.monthYear > b.monthYear) return -1;
     return 0;
@@ -25,29 +17,94 @@ const BoletoHistory = ({ history, currentMonth, onSelectMonth }) => {
     }
   };
 
+  const hasBoleto = (item) => {
+    // Check if boleto exists in history
+    if (item.boleto && item.boleto.valorCobrado) return true;
+    // Check if current month has boleto data in state but not yet saved to history
+    if (item.monthYear === currentMonth && currentBoletoDados !== null) return true;
+    return false;
+  };
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="bg-slate-50 p-2 rounded-xl flex items-center gap-3 border border-slate-100">
-        <Receipt className="text-indigo-500 ml-2" size={20} />
-        <div className="relative">
-          <select
-            value={currentMonth}
-            onChange={handleChange}
-            className="appearance-none bg-transparent font-bold text-slate-700 outline-none py-1 pl-1 pr-8 cursor-pointer min-w-[200px]"
-          >
-            <option value="">Boletos Importados</option>
-            {boletosOrdenados.map((item) => (
-              <option key={item.monthYear} value={item.monthYear}>
-                {formatMonthLabel(item.monthYear)} - {formatCur(item.boleto.valorCobrado)} - Cod: {item.boleto.codigoBarras ? item.boleto.codigoBarras.substring(0, 8) : 'N/A'}...
-              </option>
-            ))}
-          </select>
-          <ChevronDown 
-            className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" 
-            size={16} 
-          />
-        </div>
+    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-slate-50 px-4 py-3 border-b border-slate-100">
+        <h3 className="font-bold text-slate-700 text-sm flex items-center gap-2">
+          <Calendar size={16} className="text-indigo-500" />
+          Navegador de Meses
+        </h3>
       </div>
+
+      {/* Lista de meses */}
+      <div className="max-h-64 overflow-y-auto">
+        {historicoOrdenado.length === 0 ? (
+          <div className="p-4 text-center text-slate-400 text-sm">
+            Nenhum histórico disponível
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {historicoOrdenado.map((item) => {
+              const isSelected = item.monthYear === currentMonth;
+              const temBoleto = hasBoleto(item);
+
+              return (
+                <button
+                  key={item.monthYear}
+                  onClick={() => onSelectMonth(item.monthYear)}
+                  className={`w-full px-4 py-3 flex items-center justify-between transition-all hover:bg-slate-50 ${
+                    isSelected ? 'bg-indigo-50 hover:bg-indigo-100' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Indicador de boleto */}
+                    {temBoleto ? (
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <Receipt size={14} className="text-emerald-600" />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                        <Circle size={14} className="text-slate-300" />
+                      </div>
+                    )}
+
+                    <div className="text-left">
+                      <span className={`block font-semibold text-sm ${
+                        isSelected ? 'text-indigo-700' : 'text-slate-700'
+                      }`}>
+                        {formatMonthLabel(item.monthYear)}
+                      </span>
+                      <span className={`text-xs ${
+                        temBoleto ? 'text-emerald-600' : 'text-slate-400'
+                      }`}>
+                        {temBoleto 
+                          ? `Boleto: ${formatCur(item.boleto?.valorCobrado || currentBoletoDados?.valorCobrado)}` 
+                          : 'Sem boleto importado'
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Indicador de seleção */}
+                  {isSelected && (
+                    <CheckCircle2 size={18} className="text-indigo-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Footer com resumo */}
+      {historicoOrdenado.length > 0 && (
+        <div className="bg-slate-50 px-4 py-2 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
+          <span>{historicoOrdenado.length} meses no histórico</span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+            {historicoOrdenado.filter(h => hasBoleto(h)).length} com boleto
+          </span>
+        </div>
+      )}
     </div>
   );
 };
