@@ -29,30 +29,20 @@ const Dashboard = () => {
           isSaving={isSaving} saveSuccess={saveSuccess} onSave={handleSave}
         />
         
-        {/* Seção de Importação de Boleto e Detalhes */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7">
-            <BoletoUpload
-              onUpload={uploadBoleto}
-              isUploading={isUploading}
-              uploadError={uploadError}
-              boletoData={boletoData}
-              extractionMethod={extractionMethod}
-              progress={progress}
-              onConfirm={(data) => {
-                handleBoletoImport(data);
-                clearBoleto();
-              }}
-              onCancel={clearBoleto}
-            />
-          </div>
-          <div className="lg:col-span-5">
-            <BoletoDetailsCard 
-              boletoData={currentBoletoDados} 
-              currentMonth={currentMonth} 
-            />
-          </div>
-        </div>
+        {/* Seção de Importação de Boleto */}
+        <BoletoUpload
+          onUpload={uploadBoleto}
+          isUploading={isUploading}
+          uploadError={uploadError}
+          boletoData={boletoData}
+          extractionMethod={extractionMethod}
+          progress={progress}
+          onConfirm={(data) => {
+            handleBoletoImport(data);
+            clearBoleto();
+          }}
+          onCancel={clearBoleto}
+        />
 
         {/* Seção de Rateio e Tabela */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -60,14 +50,8 @@ const Dashboard = () => {
             <BoletoInput totalBoleto={totalBoleto} setTotalBoleto={setTotalBoleto} currentMonth={currentMonth} />
             <BeneficiariosTable items={items} updateItem={updateItem} baseTotal={totals.baseTotal} />
           </div>
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4">
             <RateioCard totals={totals} />
-            <BoletoHistory
-              history={history}
-              currentMonth={currentMonth}
-              onSelectMonth={setCurrentMonth}
-              currentBoletoDados={currentBoletoDados}
-            />
           </div>
         </div>
 
@@ -79,6 +63,24 @@ const Dashboard = () => {
           totalBoleto={totalBoleto}
           onSelectMonth={setCurrentMonth}
         />
+
+        {/* Seção de Histórico e Detalhes */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-4">
+            <BoletoHistory
+              history={history}
+              currentMonth={currentMonth}
+              onSelectMonth={setCurrentMonth}
+              currentBoletoDados={currentBoletoDados}
+            />
+          </div>
+          <div className="lg:col-span-8">
+            <BoletoDetailsCard 
+              boletoData={currentBoletoDados} 
+              currentMonth={currentMonth} 
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
