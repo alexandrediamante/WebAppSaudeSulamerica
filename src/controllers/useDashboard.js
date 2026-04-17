@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { useAuth } from "./useAuth";
 import { useFirestore } from "./useFirestore";
 import { useBoleto } from "./useBoleto";
 import {
@@ -8,8 +7,7 @@ import {
 } from "../models/beneficiarios";
 import { calcularRateio } from "../models/rateio";
 
-export function useDashboard() {
-  const { user, authError } = useAuth();
+export function useDashboard(user) {
   const { history, isSaving, saveSuccess, saveFechamento } = useFirestore(user);
   const {
     isUploading,
@@ -91,8 +89,6 @@ export function useDashboard() {
     Math.max(...history.map((h) => h.totalBoleto), totalBoleto, 2000) * 1.1;
 
   return {
-    user,
-    authError,
     history,
     currentMonth,
     setCurrentMonth,

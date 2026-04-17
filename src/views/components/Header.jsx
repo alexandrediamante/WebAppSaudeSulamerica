@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calculator, Calendar, Save, CheckCircle2 } from 'lucide-react';
+import { Calculator, Calendar, Save, CheckCircle2, LogOut } from 'lucide-react';
 
-const Header = ({ currentMonth, setCurrentMonth, isSaving, saveSuccess, onSave }) => {
+const Header = ({ currentMonth, setCurrentMonth, isSaving, saveSuccess, onSave, user, logout }) => {
   return (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
       <div>
@@ -31,6 +31,29 @@ const Header = ({ currentMonth, setCurrentMonth, isSaving, saveSuccess, onSave }
           {saveSuccess ? <CheckCircle2 size={20} /> : <Save size={20} />}
           {isSaving ? 'Salvando...' : saveSuccess ? 'Salvo!' : 'Gravar Mês'}
         </button>
+
+        {/* User Info & Logout */}
+        {user && (
+          <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+            {user.photoURL && (
+              <img 
+                src={user.photoURL} 
+                alt={user.displayName || 'User'} 
+                className="w-8 h-8 rounded-full object-cover border-2 border-slate-200"
+              />
+            )}
+            <span className="text-sm font-medium text-slate-700 hidden md:block">
+              {user.displayName}
+            </span>
+            <button
+              onClick={logout}
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              title="Sair"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
