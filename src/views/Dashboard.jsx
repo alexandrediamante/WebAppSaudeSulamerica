@@ -9,6 +9,7 @@ import BeneficiariosTable from './components/BeneficiariosTable';
 import RateioCard from './components/RateioCard';
 import HistoricoChart from './components/HistoricoChart';
 
+
 const Dashboard = ({ user, logout }) => {
   const {
     history, currentMonth, setCurrentMonth,
@@ -27,6 +28,8 @@ const Dashboard = ({ user, logout }) => {
           isSaving={isSaving} saveSuccess={saveSuccess} onSave={handleSave}
           user={user} logout={logout}
         />
+
+
         
         {/* Seção de Importação de Boleto */}
         <BoletoUpload

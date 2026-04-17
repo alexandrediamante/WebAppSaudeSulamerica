@@ -39,6 +39,7 @@ const Header = ({ currentMonth, setCurrentMonth, isSaving, saveSuccess, onSave, 
               <img 
                 src={user.photoURL} 
                 alt={user.displayName || 'User'} 
+                referrerPolicy="no-referrer"
                 className="w-8 h-8 rounded-full object-cover border-2 border-slate-200"
               />
             )}
