@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart3, History, MousePointerClick } from 'lucide-react';
 import { formatCur } from '../../utils/formatters';
 
 const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onSelectMonth }) => {
+  const [tooltip, setTooltip] = useState(null);
+
+  const handleMouseEnter = (e, h) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltip({
+      data: h,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+  };
+
+  const handleMouseLeave = () => setTooltip(null);
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-6">
@@ -37,20 +50,12 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                             onClick={() => onSelectMonth && onSelectMonth(h.monthYear)}
                         >
                             <div className="relative flex justify-center w-12 sm:w-16 h-40">
-                                {/* Tooltip Hover */}
-                                <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                                    {formatCur(h.totalBoleto)}
-                                    <br/>
-                                    Copart: {formatCur(h.items.reduce((acc, i) => acc + i.copart, 0))}
-                                    <br/>
-                                    <span className="text-emerald-300">Clique para selecionar</span>
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
-                                </div>
-                                
                                 {/* Barra do Gráfico */}
                                 <div 
                                     className={`w-full rounded-t-md transition-all duration-500 flex items-end ${isCurrent ? 'bg-indigo-500 ring-4 ring-indigo-200' : 'bg-slate-200 group-hover:bg-indigo-300 group-hover:scale-105'} cursor-pointer`}
                                     style={{ height: `${heightPercentage}%` }}
+                                    onMouseEnter={(e) => handleMouseEnter(e, h)}
+                                    onMouseLeave={handleMouseLeave}
                                 >
                                     {/* Barra interna de coparticipação (visual) */}
                                     <div 
@@ -68,6 +73,25 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                 </div>
               </div>
             </div>
+        )}
+
+        {/* Tooltip Fixed Position - Renderizado fora do overflow container */}
+        {tooltip && (
+          <div 
+            className="fixed z-[9999] bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg pointer-events-none whitespace-nowrap shadow-lg"
+            style={{
+              left: tooltip.x,
+              top: tooltip.y,
+              transform: 'translate(-50%, -100%)'
+            }}
+          >
+            {formatCur(tooltip.data.totalBoleto)}
+            <br/>
+            Copart: {formatCur(tooltip.data.items.reduce((acc, i) => acc + i.copart, 0))}
+            <br/>
+            <span className="text-emerald-300">Clique para selecionar</span>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+          </div>
         )}
     </div>
   );
