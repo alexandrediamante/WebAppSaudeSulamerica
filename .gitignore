@@ -9,3 +9,8 @@ dist/
 wiki/
 wiki-push/
 WIKI-README.md
+*.png
+screenshot-*.png
+section-*.png
+layout-validation-*.png
+verification-*.png

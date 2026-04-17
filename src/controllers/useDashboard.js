@@ -69,12 +69,19 @@ export function useDashboard() {
   };
 
   const handleBoletoImport = (boletoData) => {
-    setTotalBoleto(boletoData.valorCobrado);
+    const newTotalBoleto = boletoData.valorCobrado;
+    const newMonth = boletoData.mesReferencia || currentMonth;
+
+    setTotalBoleto(newTotalBoleto);
     if (boletoData.mesReferencia) {
       setCurrentMonth(boletoData.mesReferencia);
     }
     setCurrentBoleto(boletoData);
     setCurrentBoletoDados(boletoData);
+
+    // Calcular rateio com o novo valor do boleto e salvar automaticamente
+    const newTotals = calcularRateio(items, newTotalBoleto);
+    saveFechamento(newMonth, newTotalBoleto, newTotals, boletoData);
   };
 
   const handleSave = () =>
