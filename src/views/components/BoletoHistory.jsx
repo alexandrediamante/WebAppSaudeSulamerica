@@ -1,8 +1,9 @@
-import React from 'react';
-import { Receipt, ChevronDown, Calendar, CheckCircle2, Circle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Receipt, ChevronDown, Calendar, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { formatCur, formatMonthLabel } from '../../utils/formatters';
 
-const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDados }) => {
+const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDados, onDeleteMonth }) => {
+  const [deletingMonth, setDeletingMonth] = useState(null);
   // Ordena todo o histórico por mês (mais recente primeiro)
   const historicoOrdenado = [...history].sort((a, b) => {
     if (a.monthYear < b.monthYear) return 1;
@@ -10,11 +11,20 @@ const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDado
     return 0;
   });
 
-  const handleChange = (e) => {
-    const selectedMonth = e.target.value;
-    if (selectedMonth) {
-      onSelectMonth(selectedMonth);
+  const handleDeleteClick = (e, monthYear) => {
+    e.stopPropagation();
+    setDeletingMonth(monthYear);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingMonth) {
+      await onDeleteMonth(deletingMonth);
+      setDeletingMonth(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeletingMonth(null);
   };
 
   const hasBoleto = (item) => {
@@ -51,7 +61,7 @@ const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDado
                 <button
                   key={item.monthYear}
                   onClick={() => onSelectMonth(item.monthYear)}
-                  className={`w-full px-4 py-3 flex items-center justify-between transition-all hover:bg-slate-50 ${
+                  className={`group w-full px-4 py-3 flex items-center justify-between transition-all hover:bg-slate-50 ${
                     isSelected ? 'bg-indigo-50 hover:bg-indigo-100' : ''
                   }`}
                 >
@@ -84,9 +94,17 @@ const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDado
                     </div>
                   </div>
 
-                  {/* Indicador de seleção */}
-                  {isSelected && (
+                  {/* Indicador de seleção ou botão de delete */}
+                  {isSelected ? (
                     <CheckCircle2 size={18} className="text-indigo-500" />
+                  ) : (
+                    <button
+                      onClick={(e) => handleDeleteClick(e, item.monthYear)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-100 rounded-lg text-slate-400 hover:text-red-600"
+                      title="Excluir mês"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
                 </button>
               );
@@ -103,6 +121,41 @@ const BoletoHistory = ({ history, currentMonth, onSelectMonth, currentBoletoDado
             <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
             {historicoOrdenado.filter(h => hasBoleto(h)).length} com boleto
           </span>
+        </div>
+      )}
+
+      {/* Modal de confirmação */}
+      {deletingMonth && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={20} className="text-red-600" />
+              </div>
+              <h3 className="font-bold text-slate-800">Confirmar exclusão</h3>
+            </div>
+            <p className="text-slate-600 mb-6">
+              Tem certeza que deseja excluir os dados de{' '}
+              <span className="font-semibold text-slate-800">
+                {formatMonthLabel(deletingMonth)}
+              </span>
+              ? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

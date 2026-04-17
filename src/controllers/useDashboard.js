@@ -8,7 +8,8 @@ import {
 import { calcularRateio } from "../models/rateio";
 
 export function useDashboard(user) {
-  const { history, isSaving, saveSuccess, saveFechamento } = useFirestore(user);
+  const { history, isSaving, saveSuccess, saveFechamento, deleteMonth } =
+    useFirestore(user);
   const {
     isUploading,
     uploadError,
@@ -112,5 +113,6 @@ export function useDashboard(user) {
     clearBoleto,
     extractionMethod,
     progress,
+    deleteMonth,
   };
 }

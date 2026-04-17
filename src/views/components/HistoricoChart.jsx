@@ -23,8 +23,9 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                 <p className="text-xs">Clique em "Gravar Mês" para iniciar seu histórico.</p>
             </div>
         ) : (
-            <div className="overflow-x-auto pb-2">
-              <div className="h-56 flex items-end gap-2 sm:gap-4 pt-16 min-w-min">
+            <div className="pt-16">
+              <div className="overflow-x-auto pb-2">
+                <div className="h-56 flex items-end gap-2 sm:gap-4 min-w-min">
                 {history.map((h) => {
                     const heightPercentage = (h.totalBoleto / maxChartValue) * 100;
                     const isCurrent = h.monthYear === currentMonth;
@@ -64,6 +65,7 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                         </div>
                     );
                 })}
+                </div>
               </div>
             </div>
         )}

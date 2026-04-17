@@ -17,7 +17,7 @@ const Dashboard = ({ user, logout }) => {
     isSaving, saveSuccess, handleSave, maxChartValue,
     handleBoletoImport, isUploading, uploadError, boletoData,
     uploadBoleto, clearBoleto, extractionMethod, progress,
-    currentBoletoDados
+    currentBoletoDados, deleteMonth
   } = useDashboard(user);
 
   return (
@@ -74,6 +74,7 @@ const Dashboard = ({ user, logout }) => {
               currentMonth={currentMonth}
               onSelectMonth={setCurrentMonth}
               currentBoletoDados={currentBoletoDados}
+              onDeleteMonth={deleteMonth}
             />
           </div>
           <div className="lg:col-span-8">

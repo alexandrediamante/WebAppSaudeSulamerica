@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, doc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db, appId } from "../config/firebase";
 
 export function useFirestore(user) {
@@ -91,5 +97,25 @@ export function useFirestore(user) {
     }
   };
 
-  return { history, isSaving, saveSuccess, saveFechamento };
+  // Deletar Fechamento
+  const deleteMonth = async (monthYear) => {
+    if (!user) return;
+    try {
+      const docRef = doc(
+        db,
+        "artifacts",
+        appId,
+        "users",
+        user.uid,
+        "history",
+        monthYear,
+      );
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      alert("Erro ao excluir! Verifique as regras do Firestore.");
+    }
+  };
+
+  return { history, isSaving, saveSuccess, saveFechamento, deleteMonth };
 }
