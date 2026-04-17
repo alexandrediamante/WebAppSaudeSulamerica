@@ -4,7 +4,7 @@ import { formatCur } from '../../utils/formatters';
 
 const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onSelectMonth }) => {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 overflow-visible">
+    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-6">
             <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-xs tracking-widest">
                 <BarChart3 size={18} className="text-indigo-500" />
@@ -23,7 +23,7 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                 <p className="text-xs">Clique em "Gravar Mês" para iniciar seu histórico.</p>
             </div>
         ) : (
-            <div className="h-56 flex items-end gap-2 sm:gap-4 overflow-visible pb-2 pt-12">
+            <div className="h-56 flex items-end gap-2 sm:gap-4 overflow-x-auto overflow-y-visible pb-2 pt-12">
                 {history.map((h) => {
                     const heightPercentage = (h.totalBoleto / maxChartValue) * 100;
                     const isCurrent = h.monthYear === currentMonth;
