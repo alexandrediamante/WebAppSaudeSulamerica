@@ -23,7 +23,8 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                 <p className="text-xs">Clique em "Gravar Mês" para iniciar seu histórico.</p>
             </div>
         ) : (
-            <div className="h-56 flex items-end gap-2 sm:gap-4 overflow-x-auto overflow-y-visible pb-2 pt-12">
+            <div className="overflow-x-auto pb-2">
+              <div className="h-56 flex items-end gap-2 sm:gap-4 pt-16 min-w-min">
                 {history.map((h) => {
                     const heightPercentage = (h.totalBoleto / maxChartValue) * 100;
                     const isCurrent = h.monthYear === currentMonth;
@@ -36,12 +37,13 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                         >
                             <div className="relative flex justify-center w-12 sm:w-16 h-40">
                                 {/* Tooltip Hover */}
-                                <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded pointer-events-none whitespace-nowrap z-50">
+                                <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg pointer-events-none whitespace-nowrap z-50 shadow-lg">
                                     {formatCur(h.totalBoleto)}
                                     <br/>
                                     Copart: {formatCur(h.items.reduce((acc, i) => acc + i.copart, 0))}
                                     <br/>
                                     <span className="text-emerald-300">Clique para selecionar</span>
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
                                 </div>
                                 
                                 {/* Barra do Gráfico */}
@@ -62,6 +64,7 @@ const HistoricoChart = ({ history, currentMonth, maxChartValue, totalBoleto, onS
                         </div>
                     );
                 })}
+              </div>
             </div>
         )}
     </div>
