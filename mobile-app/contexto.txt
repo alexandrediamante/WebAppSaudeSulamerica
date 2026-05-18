@@ -1,0 +1,46 @@
+preciso que analise meu projeto e deixe ele rodando para que eu possa subir isso no meu servidor debian 13 não esqueca de tirar as credentials de dentro do app.jsx e criar um .env
+
+crie tudo que precisar par que suba isso em produção o mais rapido e não esqueca que ao final da tarefa faça todos os testes abra o app web simule tudo ok.
+
+vou lhe enviar o contexto de como criei isso ok.
+
+Crie apartir do gemini 
+Contexto
+Fala, Alê! Entendi perfeitamente. Você quer saber como ratear (distribuir) o valor da multa/juros proporcionalmente para cada item, para que no final a soma feche exatamente com o Total-A-Pagar.
+
+Como o valor aumentou de 1.441,05 para 1.477,06, temos um fator de acréscimo.
+
+1. O Cálculo do Fator
+Primeiro, descobrimos quanto cada real do plano original "virou" com a multa:
+
+Fator= 
+Total_Plano
+Total_A_Pagar
+​= 1441,051477,06​
+ ≈1,02498872
+2. Rateio Proporcional
+Agora, basta multiplicar o valor original de cada faixa por esse fator. Veja como fica o "A Pagar" de cada um:
+
+Item	Valor Original	Cálculo (Valor * Fator)	Valor Final Proporcional
+Faixa 0 a 18	633,04	633,04×1,02498872	648,86
+Faixa 44 a 48	808,01	808,01×1,02498872	828,20
+TOTAL	1.441,05		1.477,06
+Como aplicar isso no seu código PL/SQL?
+Se você estiver fazendo isso naquele loop que vimos no print, você pode usar a própria variável de percentual que você já tem, mas somando 1 a ela (para virar o fator de 100% + multa).
+
+No seu caso, a lógica sênior para não ter erro de centavos (arredondamento) seria:
+
+SQL
+-- V_PERC_DIFERENCA já é (1477,06 - 1441,05) / 1441,05
+V_FATOR := 1 + V_PERC_DIFERENCA; 
+
+-- No loop:
+V_VALOR_PROPORCIONAL := ROUND(R_FINAN.VALOR * V_FATOR, 2);
+Resumo dos valores para conferência:
+Quem pagava 633,04, agora vai pagar 648,86.
+
+Quem pagava 808,01, agora vai pagar 828,20.
+
+Soma: 648,86 + 828,20 = 1.477,06 (Bateu certinho com o total com multa!).
+
+Faz sentido para o que você está montando na tela?

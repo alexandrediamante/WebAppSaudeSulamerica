@@ -1,0 +1,118 @@
+# =============================================================================
+# Docker Compose - WebApp Saude Sulamerica
+# Orquestração do container para deploy simplificado
+# =============================================================================
+# Uso:
+#   docker-compose up -d        # Inicia em background
+#   docker-compose down         # Para os containers
+#   docker-compose logs -f      # Visualiza logs em tempo real
+#   docker-compose build        # Rebuilda a imagem
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # Serviço principal da aplicação web
+  web:
+    # Nome do container
+    container_name: webapp-saude-sulamerica
+    
+    # Build da imagem usando o Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Mapeamento de portas
+    # Host:Container - Acesse http://localhost no host
+    ports:
+      - "80:80"
+    
+    # Política de reinicialização
+    # unless-stopped: reinicia sempre, exceto se parado manualmente
+    restart: unless-stopped
+    
+    # Arquivo de variáveis de ambiente
+    # Certifique-se de que o arquivo .env existe antes de iniciar
+    env_file:
+      - .env
+    
+    # Variáveis de ambiente adicionais (opcional)
+    environment:
+      - NODE_ENV=production
+    
+    # Limites de recursos (opcional, descomente se necessário)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 256M
+    
+    # Healthcheck do container
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Rede do container
+    networks:
+      - webapp-network
+
+# Definição das redes
+networks:
+  webapp-network:
+    driver: bridge
+
+# =============================================================================
+# INSTRUÇÕES DE USO
+# =============================================================================
+# 
+# 1. PRIMEIRA EXECUÇÃO:
+#    docker-compose up -d --build
+#
+# 2. ATUALIZAR APÓS MUDANÇAS NO CÓDIGO:
+#    docker-compose down
+#    docker-compose up -d --build
+#
+# 3. VER LOGS:
+#    docker-compose logs -f web
+#
+# 4. PARAR O SERVIÇO:
+#    docker-compose down
+#
+# 5. REMOVER VOLUMES E IMAGENS (limpeza completa):
+#    docker-compose down --rmi all --volumes
+#
+# =============================================================================
+# CONFIGURAÇÃO SSL COM TRAEFIK (Opcional)
+# =============================================================================
+# Para usar SSL automático com Let's Encrypt via Traefik, substitua o 
+# serviço 'web' acima pelo seguinte:
+#
+# services:
+#   web:
+#     build: .
+#     container_name: webapp-saude-sulamerica
+#     restart: unless-stopped
+#     env_file:
+#       - .env
+#     labels:
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.webapp.rule=Host(`your_domain.com`)"
+#       - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
+#       - "traefik.http.routers.webapp.entrypoints=websecure"
+#       - "traefik.http.services.webapp.loadbalancer.server.port=80"
+#     networks:
+#       - webapp-network
+#       - traefik-public
+#
+# networks:
+#   webapp-network:
+#     driver: bridge
+#   traefik-public:
+#     external: true
+# =============================================================================

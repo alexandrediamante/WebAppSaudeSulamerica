@@ -1,0 +1,44 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "feature/dashboard-rateio-saude-mvc" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Install dependencies and build Web
+      working-directory: ./mobile-app
+      run: |
+        npm install
+        npm run build
+
+    - name: Sync Capacitor
+      working-directory: ./mobile-app
+      run: npx cap sync android
+
+    - name: Build APK
+      working-directory: ./mobile-app/android
+      run: ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: ADSplitSaudeSulameria-APK
+        path: mobile-app/android/app/build/outputs/apk/debug/*.apk
