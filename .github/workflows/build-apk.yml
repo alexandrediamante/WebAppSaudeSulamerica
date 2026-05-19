@@ -7,7 +7,7 @@ on:
 
 env:
   ANDROID_HOME: C:\Users\alexandre\AppData\Local\Android\Sdk
-  JAVA_HOME: C:\Program Files\Zulu\zulu-17
+  JAVA_HOME: C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot
 
 jobs:
   build:
@@ -48,8 +48,8 @@ jobs:
       working-directory: ./mobile-app/android
       run: |
         $env:ANDROID_HOME = "C:\Users\alexandre\AppData\Local\Android\Sdk"
-        $env:JAVA_HOME = "C:\Program Files\Zulu\zulu-17"
-        $env:Path += ";$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools"
+        $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+        $env:Path += ";$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;C:\Program Files\nodejs"
         .\gradlew.bat assembleDebug
 
     - name: Upload APK
