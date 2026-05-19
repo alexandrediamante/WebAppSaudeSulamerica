@@ -54,6 +54,7 @@ jobs:
 
     - name: Commit APK no repositório
       shell: powershell
+      working-directory: ./
       run: |
         $env:Path += ";C:\Program Files\Git\cmd"
         $apkSrc = "mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
