@@ -56,14 +56,18 @@ jobs:
       shell: powershell
       run: |
         $env:Path += ";C:\Program Files\Git\cmd"
-        Set-Location $env:GITHUB_WORKSPACE
-        $apkSrc = "mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
-        $apkDst = "mobile-app\ADSplitSaudeSulameria.apk"
+        $workspace = $env:GITHUB_WORKSPACE
+        Set-Location $workspace
+        # Resolver safe.directory para o runner local
+        git config --global safe.directory $workspace
+        git config --global safe.directory "*"
+        $apkSrc = "$workspace\mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
+        $apkDst = "$workspace\mobile-app\ADSplitSaudeSulameria.apk"
         Copy-Item $apkSrc $apkDst -Force
         git config user.email "ci@github-actions"
         git config user.name "GitHub Actions - ADSplit Runner"
-        git add -f $apkDst
-        $status = git status --porcelain $apkDst
+        git add -f "mobile-app/ADSplitSaudeSulameria.apk"
+        $status = git status --porcelain "mobile-app/ADSplitSaudeSulameria.apk"
         if ($status) {
           git commit -m "build: APK atualizado automaticamente via GitHub Actions"
           git push origin HEAD
@@ -71,4 +75,4 @@ jobs:
         } else {
           Write-Host "APK identico ao anterior, nada a commitar."
         }
-        Write-Host "Concluido: $env:GITHUB_WORKSPACE\mobile-app\ADSplitSaudeSulameria.apk"
+        Write-Host "Concluido: $apkDst"
