@@ -52,29 +52,15 @@ jobs:
         $env:Path += ";$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;C:\Program Files\nodejs"
         .\gradlew.bat assembleDebug
 
-    - name: Commit APK no repositório
+    - name: Salvar APK em pasta de saída
       shell: powershell
       run: |
-        $env:Path += ";C:\Program Files\Git\cmd"
-        $workspace = "C:\Adsystem\actions-runner\_work\WebAppSaudeSulamerica\WebAppSaudeSulamerica"
-        Write-Host "Workspace: $workspace"
-        git config --global safe.directory "*"
-        Push-Location $workspace
-        $apkSrc = "$workspace\mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
-        $apkDst = "$workspace\mobile-app\ADSplitSaudeSulameria.apk"
-        Copy-Item $apkSrc $apkDst -Force
-        Write-Host "APK copiado: $(Get-Item $apkDst | Select-Object -ExpandProperty Length) bytes"
-        git config user.email "ci@github-actions"
-        git config user.name "GitHub Actions - ADSplit Runner"
-        git add -f "mobile-app/ADSplitSaudeSulameria.apk"
-        $status = git status --porcelain "mobile-app/ADSplitSaudeSulameria.apk"
-        Write-Host "Git status: $status"
-        if ($status) {
-          git commit -m "build: APK atualizado automaticamente via GitHub Actions"
-          git push origin HEAD
-          Write-Host "APK commitado com sucesso!"
-        } else {
-          Write-Host "APK identico ao anterior, nada a commitar."
-        }
-        Pop-Location
-        Write-Host "Concluido!"
+        $apkSrc = "C:\Adsystem\actions-runner\_work\WebAppSaudeSulamerica\WebAppSaudeSulamerica\mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
+        $apkOut = "C:\Adsystem\WebAppSaudeSulamerica\mobile-app\ADSplitSaudeSulameria.apk"
+        Copy-Item $apkSrc $apkOut -Force
+        $size = [math]::Round((Get-Item $apkOut).Length / 1MB, 2)
+        Write-Host "=========================================="
+        Write-Host " APK GERADO COM SUCESSO!"
+        Write-Host " Tamanho: $size MB"
+        Write-Host " Local: $apkOut"
+        Write-Host "=========================================="
