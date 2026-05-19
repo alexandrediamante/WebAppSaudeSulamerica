@@ -54,9 +54,9 @@ jobs:
 
     - name: Commit APK no repositório
       shell: powershell
-      working-directory: ./
       run: |
         $env:Path += ";C:\Program Files\Git\cmd"
+        Set-Location $env:GITHUB_WORKSPACE
         $apkSrc = "mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
         $apkDst = "mobile-app\ADSplitSaudeSulameria.apk"
         Copy-Item $apkSrc $apkDst -Force
@@ -71,4 +71,4 @@ jobs:
         } else {
           Write-Host "APK identico ao anterior, nada a commitar."
         }
-        Write-Host "Concluido: mobile-app/ADSplitSaudeSulameria.apk"
+        Write-Host "Concluido: $env:GITHUB_WORKSPACE\mobile-app\ADSplitSaudeSulameria.apk"
