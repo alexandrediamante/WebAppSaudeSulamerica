@@ -52,8 +52,18 @@ jobs:
         $env:Path += ";$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;C:\Program Files\nodejs"
         .\gradlew.bat assembleDebug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: ADSplitSaudeSulameria-APK
-        path: mobile-app/android/app/build/outputs/apk/debug/*.apk
+    - name: Commit APK no repositório
+      shell: powershell
+      run: |
+        $env:Path += ";C:\Program Files\Git\cmd"
+        $apkSrc = "mobile-app\android\app\build\outputs\apk\debug\ADSplitSaudeSulameria.apk"
+        $apkDst = "mobile-app\ADSplitSaudeSulameria.apk"
+        Copy-Item $apkSrc $apkDst -Force
+        git config user.email "ci@github-actions"
+        git config user.name "GitHub Actions - ADSplit Runner"
+        git add -f $apkDst
+        git diff --staged --quiet && Write-Host "APK sem mudancas, nada a commitar" || (
+          git commit -m "build: APK atualizado automaticamente via GitHub Actions"
+          git push origin HEAD
+        )
+        Write-Host "APK disponivel em: mobile-app/ADSplitSaudeSulameria.apk"
