@@ -62,8 +62,12 @@ jobs:
         git config user.email "ci@github-actions"
         git config user.name "GitHub Actions - ADSplit Runner"
         git add -f $apkDst
-        git diff --staged --quiet && Write-Host "APK sem mudancas, nada a commitar" || (
+        $staged = git diff --staged --name-only
+        if ($staged) {
           git commit -m "build: APK atualizado automaticamente via GitHub Actions"
           git push origin HEAD
-        )
+          Write-Host "APK commitado e enviado ao repositorio com sucesso!"
+        } else {
+          Write-Host "APK sem mudancas, nada a commitar."
+        }
         Write-Host "APK disponivel em: mobile-app/ADSplitSaudeSulameria.apk"
