@@ -9,8 +9,9 @@ dist/
 wiki/
 wiki-push/
 WIKI-README.md
-*.png
 screenshot-*.png
 section-*.png
 layout-validation-*.png
 verification-*.png
+# NÃO ignorar PNGs do Android (splash, ícones, etc)
+# mobile-app/android assets são necessários para o build
