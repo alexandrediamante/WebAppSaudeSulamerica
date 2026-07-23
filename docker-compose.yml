@@ -9,8 +9,6 @@
 #   docker-compose build        # Rebuilda a imagem
 # =============================================================================
 
-version: '3.8'
-
 services:
   # Serviço principal da aplicação web
   web:
