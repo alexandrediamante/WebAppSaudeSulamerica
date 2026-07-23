@@ -1,0 +1,3 @@
+# Garantir LF (Unix) em arquivos de configuracao do Docker/Nginx
+# Evita warning de CRLF/LF no Windows
+*.conf text eol=lf
