@@ -8,11 +8,31 @@
 # =============================================================================
 FROM node:20-alpine AS builder
 
+# =============================================================================
+# Build arguments - variáveis de ambiente para o Vite
+# Devem ser passadas via docker-compose build.args ou --build-arg
+# =============================================================================
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ARG VITE_FIREBASE_MEASUREMENT_ID
+ARG VITE_APP_ID
+
+# Converte ARG para ENV para que o Vite substitua import.meta.env.*
+ENV VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
+    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
+    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
+    VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET \
+    VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID \
+    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
+    VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID \
+    VITE_APP_ID=$VITE_APP_ID
+
 # Define o diretório de trabalho
 WORKDIR /app
-
-# Instala dependências necessárias para build
-RUN apk add --no-cache python3 make g++
 
 # Copia os arquivos de configuração de dependências primeiro
 # (aproveita o cache do Docker se não houver mudanças)
@@ -42,8 +62,8 @@ RUN apk add --no-cache curl
 # Remove a configuração padrão do Nginx
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copia a configuração customizada do Nginx
-COPY nginx.conf /etc/nginx/conf.d/webapp.conf
+# Copia a configuração customizada do Nginx (específica para Docker)
+COPY nginx.docker.conf /etc/nginx/conf.d/webapp.conf
 
 # Copia os arquivos buildados do stage anterior
 COPY --from=builder /app/dist /usr/share/nginx/html
