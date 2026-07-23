@@ -35,7 +35,8 @@ services:
     # Mapeamento de portas
     # Host:Container - Acesse http://localhost no host
     ports:
-      - "80:80"
+      # 80:80 para producao (VPS) | 8080:80 para Windows local
+      - "8080:80"
     
     # Política de reinicialização
     # unless-stopped: reinicia sempre, exceto se parado manualmente
