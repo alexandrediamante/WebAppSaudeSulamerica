@@ -3,9 +3,9 @@ import {
   parseBoletoFromText,
   calculateConfidence,
 } from "../utils/boletoParser";
-import { pdfToImages } from "../utils/pdfToImage";
+import { pdfToImages, extractTextFromPdf } from "../utils/pdfToImage";
 
-// Lazy load do Tesseract.js
+// Lazy load do Tesseract.js (apenas se necessário)
 let tesseractPromise = null;
 function getTesseract() {
   if (!tesseractPromise) {
@@ -14,15 +14,25 @@ function getTesseract() {
   return tesseractPromise;
 }
 
+/**
+ * Converte string "1.497,22" para número 1497.22
+ */
+function valorParaNumero(valorStr) {
+  if (typeof valorStr === "number") return valorStr;
+  if (!valorStr) return 0;
+  const limpo = valorStr.replace(/\./g, "").replace(",", ".");
+  const num = parseFloat(limpo);
+  return isNaN(num) ? 0 : num;
+}
+
 export function useBoleto() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [boletoData, setBoletoData] = useState(null);
-  const [extractionMethod, setExtractionMethod] = useState(null); // 'tesseract' | 'mistral'
-  const [progress, setProgress] = useState(""); // Mensagem de progresso
+  const [extractionMethod, setExtractionMethod] = useState(null);
+  const [progress, setProgress] = useState("");
   const workerRef = useRef(null);
 
-  // Cleanup worker on unmount
   useEffect(() => {
     return () => {
       if (workerRef.current) {
@@ -32,7 +42,6 @@ export function useBoleto() {
     };
   }, []);
 
-  // Inicializar Tesseract worker (lazy)
   const getWorker = useCallback(async () => {
     if (workerRef.current) return workerRef.current;
 
@@ -49,11 +58,14 @@ export function useBoleto() {
     return worker;
   }, []);
 
-  // OCR local com Tesseract.js
   const ocrWithTesseract = useCallback(
     async (file) => {
-      setProgress("Convertendo PDF em imagem...");
+      setProgress("Convertendo PDF em imagem para OCR...");
       const images = await pdfToImages(file);
+
+      if (!images || images.length === 0) {
+        throw new Error("Não foi possível converter o PDF em imagem para OCR.");
+      }
 
       const worker = await getWorker();
       let fullText = "";
@@ -64,35 +76,11 @@ export function useBoleto() {
         fullText += data.text + "\n";
       }
 
+      console.log("[useBoleto] Tesseract OCR resultado:", fullText.substring(0, 300));
       return fullText;
     },
     [getWorker],
   );
-
-  // Fallback: Mistral API
-  const ocrWithMistral = useCallback(async (file) => {
-    setProgress("Usando IA avançada para extração...");
-
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    const response = await fetch("/api/parse-boleto", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pdfBase64: base64, fileName: file.name }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `Erro API: ${response.status}`);
-    }
-
-    return await response.json();
-  }, []);
 
   const uploadBoleto = useCallback(
     async (file) => {
@@ -107,96 +95,92 @@ export function useBoleto() {
       setExtractionMethod(null);
 
       try {
-        // Passo 1: Tentar OCR local com Tesseract
         let parsed = null;
         let confidence = 0;
+        let methodUsed = "pdf-native";
 
+        // ─────────────────────────────────────────────────────────────
+        // PASS 1: Extração nativa de texto do PDF (PDF.js sem worker)
+        // ─────────────────────────────────────────────────────────────
+        setProgress("Lendo texto nativo do PDF...");
         try {
-          const ocrText = await ocrWithTesseract(file);
-          parsed = parseBoletoFromText(ocrText);
-          confidence = calculateConfidence(parsed);
+          const nativeText = await extractTextFromPdf(file);
+          console.log("[useBoleto] Texto nativo extraído, length =", nativeText?.length);
 
-          // Converter valor string para número se Tesseract extraiu
-          if (parsed.valorCobrado && typeof parsed.valorCobrado === "string") {
-            const numVal = parseFloat(
-              parsed.valorCobrado.replace(/\./g, "").replace(",", "."),
-            );
-            if (!isNaN(numVal) && numVal > 0) {
-              parsed.valorCobrado = numVal;
+          if (nativeText && nativeText.trim().length > 20) {
+            const nativeParsed = parseBoletoFromText(nativeText);
+            console.log("[useBoleto] parseBoletoFromText resultado:", nativeParsed);
+
+            const valorNum = valorParaNumero(nativeParsed.valorCobrado);
+            if (valorNum > 0) {
+              nativeParsed.valorCobrado = valorNum;
             }
+
+            const nativeConf = calculateConfidence(nativeParsed);
+            console.log("[useBoleto] Confiança nativa:", nativeConf, "| valorCobrado:", nativeParsed.valorCobrado);
+
+            if (nativeConf >= 0.4 || valorNum > 0) {
+              parsed = nativeParsed;
+              confidence = nativeConf;
+              methodUsed = "pdf-native";
+              console.log("[useBoleto] ✅ Usando extração nativa do PDF");
+            }
+          } else {
+            console.warn("[useBoleto] ⚠️ Texto nativo insuficiente:", nativeText?.length, "chars");
           }
-        } catch (tesseractError) {
-          console.warn(
-            "Tesseract OCR falhou, tentando Mistral...",
-            tesseractError,
-          );
-          confidence = 0;
+        } catch (pdfError) {
+          console.warn("[useBoleto] ❌ Extração nativa falhou:", pdfError);
         }
 
-        // Passo 2: Se confiança baixa, fallback para Mistral
-        if (confidence < 0.6) {
-          setProgress("Confiança baixa, usando IA avançada...");
+        // ─────────────────────────────────────────────────────────────
+        // PASS 2: Se confiança < 0.5, tentar Tesseract OCR
+        // ─────────────────────────────────────────────────────────────
+        if (confidence < 0.5) {
+          console.log("[useBoleto] Confiança baixa, tentando Tesseract OCR...");
           try {
-            const mistralResult = await ocrWithMistral(file);
+            const ocrText = await ocrWithTesseract(file);
+            const tesseractParsed = parseBoletoFromText(ocrText);
 
-            // Parsear resposta Mistral
-            let valorNum = mistralResult.valorCobrado || 0;
-            if (typeof valorNum === "string") {
-              valorNum =
-                parseFloat(valorNum.replace(/\./g, "").replace(",", ".")) || 0;
+            const valorNum = valorParaNumero(tesseractParsed.valorCobrado);
+            if (valorNum > 0) {
+              tesseractParsed.valorCobrado = valorNum;
             }
 
-            let vencimento = mistralResult.vencimento || "";
-            let mesReferencia = "";
-            if (vencimento) {
-              // Se veio DD/MM/YYYY, converter para YYYY-MM-DD
-              if (vencimento.includes("/")) {
-                const parts = vencimento.split("/");
-                if (parts.length === 3) {
-                  vencimento = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-                }
-              }
-              const vParts = vencimento.split("-");
-              if (vParts.length >= 2) {
-                mesReferencia = `${vParts[0]}-${vParts[1]}`;
-              }
-            }
+            const tesseractConf = calculateConfidence(tesseractParsed);
+            console.log("[useBoleto] Tesseract confiança:", tesseractConf, "| valor:", tesseractParsed.valorCobrado);
 
-            parsed = {
-              valorCobrado: valorNum,
-              vencimento,
-              mesReferencia,
-              codigoBarras:
-                mistralResult.codigoBarras ||
-                mistralResult.codigoDeBarras ||
-                "",
-              numeroDocumento: mistralResult.numeroDocumento || "",
-              nossoNumero: mistralResult.nossoNumero || "",
-              beneficiario: mistralResult.beneficiario || "",
-              pagador: mistralResult.pagador || "",
-              importadoEm: new Date().toISOString(),
-            };
-            setExtractionMethod("mistral");
-          } catch (mistralError) {
-            console.error("Mistral API também falhou:", mistralError);
-            // Se temos resultado parcial do Tesseract, usar mesmo com baixa confiança
-            if (parsed && parsed.valorCobrado) {
-              setExtractionMethod("tesseract");
-            } else {
-              throw new Error(
-                "Não foi possível extrair dados do boleto. Tente novamente ou insira os valores manualmente.",
-              );
+            if (tesseractConf > confidence || valorNum > 0) {
+              parsed = tesseractParsed;
+              confidence = tesseractConf;
+              methodUsed = "tesseract";
+              console.log("[useBoleto] ✅ Usando OCR Tesseract");
             }
+          } catch (tesseractError) {
+            console.warn("[useBoleto] ❌ Tesseract OCR falhou:", tesseractError);
           }
-        } else {
-          setExtractionMethod("tesseract");
         }
 
-        setProgress("");
-        setBoletoData(parsed);
-        return parsed;
+        // ─────────────────────────────────────────────────────────────
+        // VALIDAÇÃO FINAL
+        // NOTA: Não existe backend /api/parse-boleto (app 100% estático)
+        // Se as duas extrações falharem, exibir erro com instrução manual
+        // ─────────────────────────────────────────────────────────────
+        if (parsed && (parsed.valorCobrado > 0 || parsed.vencimento || parsed.codigoBarras)) {
+          setProgress("");
+          setBoletoData(parsed);
+          setExtractionMethod(methodUsed);
+          console.log("[useBoleto] ✅ Boleto processado com sucesso:", parsed);
+          return parsed;
+        }
+
+        // Sem resultado válido — exibir erro orientado
+        console.error("[useBoleto] ❌ Nenhum método extraiu dados válidos do boleto");
+        throw new Error(
+          "Não foi possível extrair dados do boleto automaticamente. " +
+          "Verifique se o PDF é um boleto válido e tente novamente, ou insira os valores manualmente.",
+        );
       } catch (error) {
-        console.error("Erro ao processar boleto:", error);
+        console.error("[useBoleto] Erro no upload:", error);
         setUploadError(error.message || "Erro ao processar o boleto.");
         setProgress("");
         return null;
@@ -204,7 +188,7 @@ export function useBoleto() {
         setIsUploading(false);
       }
     },
-    [ocrWithTesseract, ocrWithMistral],
+    [ocrWithTesseract],
   );
 
   const clearBoleto = useCallback(() => {
